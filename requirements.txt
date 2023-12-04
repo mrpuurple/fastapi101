@@ -1,2 +1,6 @@
 fastapi
 uvicorn[standard]
+sqlalchemy
+databases[aiosqlite]
+# For Postgres
+# databases[asyncpg]
