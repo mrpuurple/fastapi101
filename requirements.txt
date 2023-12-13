@@ -4,3 +4,5 @@ sqlalchemy
 databases[aiosqlite]
 # For Postgres
 # databases[asyncpg]
+python-dotenv
+pydantic-settings
