@@ -12,3 +12,5 @@ venv.bak/
 .vscode/
 *.db
 *.png
+.coverage
+.coveragerc

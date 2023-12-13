@@ -1,4 +1,5 @@
 ruff
 isort
 pytest
+pytest-cov
 httpx
