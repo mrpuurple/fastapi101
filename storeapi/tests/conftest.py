@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
 os.environ["ENV_STATE"] = "test"
-from storeapi.database import database  # noqa: E402
+from storeapi.database import database, user_table  # noqa: E402
 from storeapi.main import app  # noqa: E402
 
 
@@ -31,3 +31,19 @@ async def db() -> AsyncGenerator:
 async def async_client(client) -> AsyncGenerator:
     async with AsyncClient(app=app, base_url=client.base_url) as ac:
         yield ac
+
+
+@pytest.fixture()
+async def registred_user(async_client: AsyncClient) -> dict:
+    user_details = {"email": "test@example.net", "password": "1234"}
+    await async_client.post("/register", json=user_details)
+    query = user_table.select().where(user_table.c.email == user_details["email"])
+    user = await database.fetch_one(query)
+    user_details["id"] = user.id
+    return user_details
+
+
+@pytest.fixture()
+async def logged_in_token(async_client: AsyncClient, registred_user: dict) -> str:
+    response = await async_client.post("/token", json=registred_user)
+    return response.json()["access_token"]

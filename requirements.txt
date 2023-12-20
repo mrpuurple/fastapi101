@@ -10,3 +10,6 @@ pydantic-settings==2.1.0
 rich==13.7.0
 asgi-correlation-id==4.2.0
 python-json-logger==2.0.7
+python-jose==3.3.0
+python-multipart==0.0.6
+passlib[bcrypt]
