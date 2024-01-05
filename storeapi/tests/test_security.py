@@ -1,5 +1,6 @@
 import pytest
 from jose import jwt
+
 from storeapi import security
 
 
@@ -20,10 +21,10 @@ def test_password_hashes():
 
 
 @pytest.mark.anyio
-async def test_get_user(registred_user: dict):
-    user = await security.get_user(registred_user["email"])
+async def test_get_user(registered_user: dict):
+    user = await security.get_user(registered_user["email"])
 
-    assert user.email == registred_user["email"]
+    assert user.email == registered_user["email"]
 
 
 @pytest.mark.anyio
@@ -34,12 +35,12 @@ async def test_get_user_not_found():
 
 
 @pytest.mark.anyio
-async def test_authenticate_user(registred_user: dict):
+async def test_authenticate_user(registered_user: dict):
     user = await security.authenticate_user(
-        registred_user["email"],
-        registred_user["password"],
+        registered_user["email"],
+        registered_user["password"],
     )
-    assert user.email == registred_user["email"]
+    assert user.email == registered_user["email"]
 
 
 @pytest.mark.anyio
@@ -49,16 +50,16 @@ async def test_authenticate_user_not_found():
 
 
 @pytest.mark.anyio
-async def test_authenticate_user_wrong_password(registred_user: dict):
+async def test_authenticate_user_wrong_password(registered_user: dict):
     with pytest.raises(security.HTTPException):
-        await security.authenticate_user(registred_user["email"], "wrong password")
+        await security.authenticate_user(registered_user["email"], "wrong password")
 
 
 @pytest.mark.anyio
-async def test_get_current_user(registred_user: dict):
-    token = security.create_access_token(registred_user["email"])
+async def test_get_current_user(registered_user: dict):
+    token = security.create_access_token(registered_user["email"])
     user = await security.get_current_user(token)
-    assert user.email == registred_user["email"]
+    assert user.email == registered_user["email"]
 
 
 @pytest.mark.anyio
