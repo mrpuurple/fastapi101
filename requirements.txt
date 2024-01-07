@@ -1,7 +1,7 @@
 fastapi==0.104.1
-uvicorn[standard]
+uvicorn[standard]==0.24.0.post1
 SQLAlchemy==1.4.50
-databases[aiosqlite]
+databases[aiosqlite]==0.8.0
 # For Postgres
 # databases[asyncpg]
 python-dotenv==1.0.0
@@ -14,3 +14,5 @@ python-jose==3.3.0
 python-multipart==0.0.6
 passlib[bcrypt]
 httpx==0.25.2
+aiofiles==23.2.1
+b2sdk==1.29.0
