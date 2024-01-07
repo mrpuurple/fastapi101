@@ -2,7 +2,7 @@ import logging
 from enum import Enum
 from typing import Annotated
 import sqlalchemy
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 
 from storeapi.database import comment_table, database, post_table, like_table
 from storeapi.models.post import (
@@ -17,6 +17,7 @@ from storeapi.models.post import (
 )
 from storeapi.models.user import User
 from storeapi.security import get_current_user
+from storeapi.tasks import generate_and_add_to_post
 
 router = APIRouter()
 
@@ -41,7 +42,11 @@ async def find_post(post_id: int):
 
 @router.post("/post", response_model=UserPost, status_code=201)
 async def create_post(
-    post: UserPostIn, current_user: Annotated[User, Depends(get_current_user)]
+    post: UserPostIn,
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks,
+    request: Request,
+    prompt: str = None,
 ):
     logger.info("Creating post")
 
@@ -51,6 +56,17 @@ async def create_post(
     logger.debug(query)
 
     last_record_id = await database.execute(query)
+    
+    if prompt:
+        background_tasks.add_task(
+            generate_and_add_to_post,
+            current_user.email,
+            last_record_id,
+            request.url_for("get_post_with_comments", post_id=last_record_id),
+            database,
+            prompt,
+        )
+    
     return {**data, "id": last_record_id}
 
 
@@ -110,10 +126,10 @@ async def get_comments_on_post(post_id: int):
 async def get_post_with_comments(post_id: int):
     logger.info("Getting post and its comments")
 
-    query = select_post_and_likes.where(post_table.c.id  == post_id)
-    
+    query = select_post_and_likes.where(post_table.c.id == post_id)
+
     logger.debug(query)
-    
+
     post = await database.fetch_one(query)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")

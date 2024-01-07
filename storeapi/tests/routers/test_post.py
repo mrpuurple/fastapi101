@@ -1,45 +1,16 @@
 import pytest
 from httpx import AsyncClient
 
+from storeapi.tests.helpers import create_post, create_comment, like_post
 from storeapi import security
 
 
-async def create_post(
-    body: str, async_client: AsyncClient, logged_in_token: str
-) -> dict:
-    response = await async_client.post(
-        "/post",
-        json={"body": body},
-        headers={"Authorization": f"Bearer {logged_in_token}"},
-    )
-    return response.json()
-
-
-async def create_comment(
-    body: str, post_id: int, async_client: AsyncClient, logged_in_token: str
-) -> dict:
-    response = await async_client.post(
-        "/comment",
-        json={"body": body, "post_id": post_id},
-        headers={"Authorization": f"Bearer {logged_in_token}"},
-    )
-    return response.json()
-
-
-async def like_post(
-    post_id: int, async_client: AsyncClient, logged_in_token: str
-) -> dict:
-    response = await async_client.post(
-        "/like",
-        json={"post_id": post_id},
-        headers={"Authorization": f"Bearer {logged_in_token}"},
-    )
-    return response.json()
-
-
 @pytest.fixture()
-async def created_post(async_client: AsyncClient, logged_in_token: str):
-    return await create_post("Test Post", async_client, logged_in_token)
+def mock_generate_cute_creature_api(mocker):
+    return mocker.patch(
+        "storeapi.tasks._generate_cute_creature_api",
+        return_value={"output_url": "https://example.com/image.jpg"},
+    )
 
 
 @pytest.fixture()
@@ -68,7 +39,27 @@ async def test_create_post(
         "id": 1,
         "body": body,
         "user_id": confirmed_user["id"],
+        "image_url": None,
     }.items() <= response.json().items()
+
+
+@pytest.mark.anyio
+async def test_create_post_with_prompt(async_client: AsyncClient, logged_in_token: str, mock_generate_cute_creature_api):
+    body = "Test Post"
+
+    response = await async_client.post(
+        "/post?prompt=A cat",
+        json={"body": body},
+        headers={"Authorization": f"Bearer {logged_in_token}"},
+    )
+    
+    assert response.status_code == 201
+    assert {
+        "id": 1,
+        "body": body,
+        "image_url": None,
+    }.items() <= response.json().items()
+    mock_generate_cute_creature_api.assert_called()
 
 
 @pytest.mark.anyio
