@@ -4,7 +4,7 @@
 
 ```sh
 # run in dev mode
-uvicorn storeapi.main:app --reload
+uvicorn --reload storeapi.main:app
 # run
 uvicorn storeapi.main:app
 ```
